@@ -1,5 +1,6 @@
 require_relative "../poly_tree_node/tree_node"
 require 'thread'
+require 'byebug'
 # Write a class, KnightPathFinder. Initialize your KnightPathFinder with
 # a starting position. For instance
 #
@@ -13,29 +14,32 @@ class KnightPathFinder
   def initialize(starting_pos=[0,0], grid = Array.new(8){Array.new(8)})
     @grid = grid # 8 x 8 grid
     @starting_pos = PolyTreeNode.new(starting_pos)
-    self.build_move_tree
-    @visited_positions = [@starting_pos]
+    @visited_positions = [@starting_pos.value]
+    @end_node = self.build_move_tree
+    debugger
+    p @end_node
   end
 
   # def find_path
   # end
   def valid_moves(pos)
-    x,y = pos
+    x,y = pos.value
     valid_moves = []
     DIRS.each do |dir|
       i,j = dir
       next if x+i <0 || x+i >7 || y +j <0 || y +j >7
       valid_moves << [x+i,y+j]
     end
+    valid_moves
   end
 
   def new_move_positions(pos)
-    avail_moves = pos.valid_moves.select {|move| !@visited_positions.include?(move)}
-    avail_moves.map do |move|
-      PolyTreeNode.new(move)
-    end
+    avail_moves = valid_moves(pos).map {|moves| PolyTreeNode.new(moves)}
+    .select {|move| !@visited_positions.include?(move.value)}
+
     avail_moves.each do |node|
       node.parent = pos
+      @visited_positions << node.value
     end
   end
 
@@ -51,13 +55,11 @@ class KnightPathFinder
     until positions.empty?
       node = positions.pop
       return node if node.value == end_point.value
-      new_move_positions(nod).each do |child_node|
+      new_move_positions(node).each do |child_node|
         positions.push(child_node)
       end
-
     end
     nil
   end
-
 
 end
